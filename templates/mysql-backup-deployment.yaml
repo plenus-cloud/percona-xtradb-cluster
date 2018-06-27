@@ -1,0 +1,60 @@
+{{- if .Values.backup.enabled }}
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "percona-xtradb-cluster.fullname" . }}-backup
+  labels:
+    app: {{ template "percona-xtradb-cluster.fullname" . }}
+    component: backup
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "percona-xtradb-cluster.fullname" . }}-backup
+      component: backup
+      release: "{{ .Release.Name }}"
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: {{ template "percona-xtradb-cluster.fullname" . }}-backup
+        component: backup
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        release: "{{ .Release.Name }}"
+        heritage: "{{ .Release.Service }}"
+    spec:
+      containers:
+      - env:
+        - name: SCHEDULE
+          value: {{ .Values.backup.schedule | quote }}
+        - name: MYSQLHOST
+          value: {{ template "percona-xtradb-cluster.fullname" . }}
+        - name: MYSQLUSER
+          value: root
+        - name: MYSQLPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "percona-xtradb-cluster.fullname" . }}
+              key: mysql-root-password
+        image: "{{ .Values.image.backupRepository }}:{{ .Values.image.backupTag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+        name: backup
+        {{- if .Values.persistence.enabled }}
+        volumeMounts:
+        - mountPath: /dump
+          name: dump
+        {{- end -}}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+      - name: dump
+        persistentVolumeClaim:
+          claimName: {{ template "percona-xtradb-cluster.fullname" . }}-backup
+      {{- end -}}
+{{- end -}}

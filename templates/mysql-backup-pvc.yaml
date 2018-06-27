@@ -1,0 +1,27 @@
+{{- if .Values.backup.enabled }}
+{{- if .Values.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ template "percona-xtradb-cluster.fullname" . }}-backup
+  labels:
+    app: {{ template "percona-xtradb-cluster.fullname" . }}
+    component: backup
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  accessModes:
+  - ReadWriteOnce
+  {{- if .Values.persistence.backupStorageClass }}
+  {{- if (eq "-" .Values.persistence.backupStorageClass) }}
+  storageClassName: ""
+  {{- else }}
+  storageClassName: "{{ .Values.persistence.backupStorageClass }}"
+  {{- end }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.backupSize | quote }}
+{{- end -}}
+{{- end -}}
