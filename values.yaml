@@ -95,3 +95,7 @@ metricsExporter: false
 
 ## When set to true will create sidecar to tail mysql log
 logTail: true
+
+## Enable publication of service with a Load Balancer
+publicService:
+  enabled: false

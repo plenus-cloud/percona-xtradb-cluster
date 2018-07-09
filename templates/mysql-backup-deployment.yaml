@@ -43,6 +43,8 @@ spec:
             secretKeyRef:
               name: {{ template "percona-xtradb-cluster.fullname" . }}
               key: mysql-root-password
+        - name: SKIPLOCK
+          value: "1"
         image: "{{ .Values.image.backupRepository }}:{{ .Values.image.backupTag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
         name: backup
